@@ -1,4 +1,4 @@
-package model_dao_generator
+package generators
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func (g *ModelDaoGenerator) Gen(config generator.GenConfig) error {
 		}
 
 		err := generator.GenerateFile(
-			"model_dao_generator/model_dao.tmpl",
+			"template/model_dao.tmpl",
 			outputPath,
 			cfg,
 		)

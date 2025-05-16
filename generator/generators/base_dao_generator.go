@@ -1,4 +1,4 @@
-package base_dao_generator
+package generators
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ type baseDaoConfig struct {
 func (g *BaseDaoGenerator) Gen(config generator.GenConfig) error {
 	outputPath := filepath.Join(config.OutputPath, "base_dao.go")
 	err := generator.GenerateFile(
-		"base_dao_generator/base_dao.tmpl",
+		"template/base_dao.tmpl",
 		outputPath,
 		baseDaoConfig{DaoPackage: path.Base(config.DaoPackagePath)},
 	)

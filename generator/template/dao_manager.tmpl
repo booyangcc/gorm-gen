@@ -61,6 +61,10 @@ func NewDaoManager(dsn string, mode string) (*DaoManager, error) {
 		return nil, err
 	}
 
+    if mode == "dev" {
+		db = db.Debug()
+	}
+
 	return NewDaoManagerWithDB(db)
 }
 

@@ -1,4 +1,4 @@
-package dao_manager_generator
+package generators
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func (g *DaoManagerGenerator) Gen(config generator.GenConfig) error {
 	}
 	outputPath := filepath.Join(config.OutputPath, "dao_manager.go")
 	err := generator.GenerateFile(
-		"dao_manager_generator/dao_manager.tmpl",
+		"template/dao_manager.tmpl",
 		outputPath,
 		cfg,
 	)

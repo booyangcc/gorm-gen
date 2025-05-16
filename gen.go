@@ -5,10 +5,8 @@ import (
 	"os/exec"
 	"strings"
 
-	_ "github.com/booyangcc/gorm-gen/base_dao_generator"
-	_ "github.com/booyangcc/gorm-gen/dao_manager_generator"
 	"github.com/booyangcc/gorm-gen/generator"
-	_ "github.com/booyangcc/gorm-gen/model_dao_generator"
+	_ "github.com/booyangcc/gorm-gen/generator/generators"
 )
 
 func Gen(config generator.GenConfig) {

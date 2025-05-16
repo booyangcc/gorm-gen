@@ -2,7 +2,7 @@ package test_dao
 
 import (
 	"gorm.io/gorm"
-    "github.com/booyangcc/gorm-gen/test/test_model"
+    "github.com/booyangcc/gorm-gen/example/test_model"
 )
 
 type AdminUserDao struct {

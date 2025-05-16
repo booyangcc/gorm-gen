@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 
 	"go/ast"
@@ -12,6 +13,9 @@ import (
 	"strings"
 	"text/template"
 )
+
+//go:embed template/*.tmpl
+var templateFS embed.FS
 
 type Generator interface {
 	Gen(config GenConfig) error
@@ -29,7 +33,7 @@ func GetGenerator() map[string]Generator {
 }
 
 func GenerateFile(templatePath, outputPath string, data interface{}) error {
-	tmpl, err := template.ParseFiles(templatePath)
+	tmpl, err := template.ParseFS(templateFS, templatePath)
 	if err != nil {
 		return err
 	}

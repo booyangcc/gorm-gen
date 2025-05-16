@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-    "github.com/booyangcc/gorm-gen/test/test_model"
+    "github.com/booyangcc/gorm-gen/example/test_model"
 
 )
 
@@ -54,6 +54,10 @@ func NewDaoManager(dsn string, mode string) (*DaoManager, error) {
 	err = db.AutoMigrate(models...)
 	if err != nil {
 		return nil, err
+	}
+
+    if mode == "dev" {
+		db = db.Debug()
 	}
 
 	return NewDaoManagerWithDB(db)
