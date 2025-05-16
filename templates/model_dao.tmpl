@@ -1,0 +1,17 @@
+package {{.DaoPackage}}
+
+import (
+	"gorm.io/gorm"
+    "{{ .ModelPackagePath }}"
+)
+
+type {{.ModelName}}Dao struct {
+	*BaseDao[{{.ModelPackage}}.{{.ModelName}}]
+}
+
+func New{{.ModelName}}Dao(db *gorm.DB) *{{.ModelName}}Dao {
+	return &{{.ModelName}}Dao{
+		BaseDao: NewBaseDao[{{.ModelPackage}}.{{.ModelName}}](db),
+	}
+}
+

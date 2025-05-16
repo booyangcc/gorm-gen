@@ -1,0 +1,185 @@
+package {{.DaoPackage}}
+
+import (
+	"sync"
+
+	"gorm.io/gorm"
+)
+
+type BaseDao[T any] struct {
+	db        *gorm.DB
+	modelType *T
+	once      sync.Once
+}
+
+func NewBaseDao[T any](db *gorm.DB) *BaseDao[T] {
+	return &BaseDao[T]{db: db}
+}
+
+// getModelType 获取或初始化模型类型实例
+func (dao *BaseDao[T]) getModelType() *T {
+	dao.once.Do(func() {
+		dao.modelType = new(T)
+	})
+	return dao.modelType
+}
+
+// Create 插入新记录
+func (dao *BaseDao[T]) Create(entity *T) error {
+	return dao.db.Create(entity).Error
+}
+
+// BatchCreate 批量插入记录
+func (dao *BaseDao[T]) BatchCreate(entities []*T) error {
+	return dao.db.Create(entities).Error
+}
+
+// GetByID 根据主键获取记录
+func (dao *BaseDao[T]) GetByID(id uint) (*T, error) {
+	var entity T
+	err := dao.db.First(&entity, id).Error
+	return &entity, err
+}
+
+// GetByIDs 根据多个主键获取记录
+func (dao *BaseDao[T]) GetByIDs(ids []uint) ([]T, error) {
+	var entities []T
+	err := dao.db.Find(&entities, ids).Error
+	return entities, err
+}
+
+// Update 更新记录
+func (dao *BaseDao[T]) Update(entity *T) error {
+	return dao.db.Save(entity).Error
+}
+
+// Updates 根据条件更新多个字段
+func (dao *BaseDao[T]) Updates(condition map[string]interface{}, updates map[string]interface{}) error {
+	return dao.db.Model(dao.getModelType()).Where(condition).Updates(updates).Error
+}
+
+// Delete 删除记录
+func (dao *BaseDao[T]) Delete(entity *T) error {
+	return dao.db.Delete(entity).Error
+}
+
+// DeleteByID 根据ID删除记录
+func (dao *BaseDao[T]) DeleteByID(id uint) error {
+	return dao.db.Delete(dao.getModelType(), id).Error
+}
+
+// DeleteByCondition 根据条件删除记录
+func (dao *BaseDao[T]) DeleteByCondition(condition map[string]interface{}) error {
+	return dao.db.Where(condition).Delete(dao.getModelType()).Error
+}
+
+// FindAll 获取所有记录
+func (dao *BaseDao[T]) FindAll() ([]T, error) {
+	var entities []T
+	err := dao.db.Find(&entities).Error
+	return entities, err
+}
+
+// FindByCondition 根据条件获取记录
+func (dao *BaseDao[T]) FindByCondition(condition map[string]interface{}) ([]T, error) {
+	var entities []T
+	err := dao.db.Where(condition).Find(&entities).Error
+	return entities, err
+}
+
+// FindByConditionWithOrder 根据条件获取记录并排序
+func (dao *BaseDao[T]) FindByConditionWithOrder(condition map[string]interface{}, order string) ([]T, error) {
+	var entities []T
+	err := dao.db.Where(condition).Order(order).Find(&entities).Error
+	return entities, err
+}
+
+// FindOneByCondition 根据条件获取单条记录
+func (dao *BaseDao[T]) FindOneByCondition(condition map[string]interface{}) (*T, error) {
+	var entity T
+	err := dao.db.Where(condition).First(&entity).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return &entity, err
+}
+
+// Count 返回记录总数
+func (dao *BaseDao[T]) Count() (int64, error) {
+	var count int64
+	err := dao.db.Model(dao.getModelType()).Count(&count).Error
+	return count, err
+}
+
+// CountByCondition 根据条件返回记录数
+func (dao *BaseDao[T]) CountByCondition(condition map[string]interface{}) (int64, error) {
+	var count int64
+	err := dao.db.Model(dao.getModelType()).Where(condition).Count(&count).Error
+	return count, err
+}
+
+// Exists 判断记录是否存在
+func (dao *BaseDao[T]) Exists(condition map[string]interface{}) (bool, error) {
+	var count int64
+	err := dao.db.Model(dao.getModelType()).Where(condition).Count(&count).Error
+	return count > 0, err
+}
+
+// Paginate 分页查询
+func (dao *BaseDao[T]) Paginate(page, pageSize int) ([]T, int64, error) {
+	return dao.PaginateWithCondition(page, pageSize, "asc", nil)
+}
+
+// PaginateWithCondition 带条件的分页查询
+func (dao *BaseDao[T]) PaginateWithCondition(page, pageSize int, order string, condition map[string]interface{}) ([]T, int64, error) {
+	var entities []T
+	var total int64
+
+	query := dao.db.Model(dao.getModelType())
+	if condition != nil {
+		query = query.Where(condition)
+	}
+
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
+	offset := (page - 1) * pageSize
+	err = query.Order(order).Offset(offset).Limit(pageSize).Find(&entities).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return entities, total, nil
+}
+
+// Transaction 执行事务操作
+func (dao *BaseDao[T]) Transaction(fn func(tx *gorm.DB) error) error {
+	return dao.db.Transaction(fn)
+}
+
+// Preload 预加载关联数据
+func (dao *BaseDao[T]) Preload(query string, args ...interface{}) *BaseDao[T] {
+	dao.db = dao.db.Preload(query, args...)
+	return dao
+}
+
+// Select 指定查询字段
+func (dao *BaseDao[T]) Select(query interface{}, args ...interface{}) *BaseDao[T] {
+	dao.db = dao.db.Select(query, args...)
+	return dao
+}
+
+// WithDB 使用自定义的DB实例
+func (dao *BaseDao[T]) WithDB(db *gorm.DB) *BaseDao[T] {
+	dao.db = db
+	return dao
+}

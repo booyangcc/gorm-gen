@@ -1,0 +1,66 @@
+package test_dao
+
+import (
+	"log"
+	"os"
+	"time"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+type Dao struct {
+	DB                *gorm.DB
+	AdminUser *AdminUserDao
+	Doc *DocDao
+	WxUser *WxUserDao
+}
+
+func newDao(db *gorm.DB) *Dao {
+	return &Dao{
+		DB:                db,
+		AdminUser: NewAdminUserDao(db),
+		Doc: NewDocDao(db),
+		WxUser: NewWxUserDao(db),
+	}
+}
+
+func New(dsn string, mode string) (*Dao, error) {
+	gormConfig := &gorm.Config{}
+	if mode == "dev" {
+		newLogger := logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			logger.Config{
+				SlowThreshold:             time.Second,
+				LogLevel:                  logger.Silent,
+				IgnoreRecordNotFoundError: true,
+				ParameterizedQueries:      false,
+				Colorful:                  true,
+			},
+		)
+		gormConfig.Logger = newLogger
+	}
+
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN: dsn,
+	}), gormConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.AutoMigrate(Daos...)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewWithDB(db)
+}
+
+func NewDaoWithDB(db *gorm.DB) (*Dao, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+
+	return newHelperDao(db), nil
+}
